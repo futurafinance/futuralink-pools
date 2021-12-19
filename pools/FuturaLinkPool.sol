@@ -26,7 +26,7 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     uint256 public amountOut;
     uint256 public amountIn;
     uint256 public totalDividends; 
-    uint256 public totalDividendPoints;
+    uint256 public totalDividendAmount;
     bool public override isStakingEnabled;
     uint256 public override earlyUnstakingFeeDuration = 1 days;
     uint16 public override unstakingFeeMagnitude = 10;
@@ -34,7 +34,7 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     uint256 public disburseBatchDivisor;
     uint256 public disburseBatchTime;
     uint256 public dividendPointsToDisbursePerSecond;
-    uint256 public lastAvailableDividentPoints;
+    uint256 public lastAvailableDividentAmount;
     uint256 public disburseDividendsTimespan = 2 hours;
 
     mapping(address => UserInfo) public userInfo;
@@ -248,12 +248,12 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
         totalDividends += amount;
 
         // Gradually handout a new batch of dividends
-        lastAvailableDividentPoints = totalAvailableDividendPoints();
+        lastAvailableDividentAmount = totalAvailableDividendPoints();
         disburseBatchTime = block.timestamp;
 
-        totalDividendPoints += amount * DIVIDEND_ACCURACY / amountIn;
+        totalDividendAmount += amount * DIVIDEND_ACCURACY / amountIn;
 
-        dividendPointsToDisbursePerSecond = (totalDividendPoints - lastAvailableDividentPoints) / disburseDividendsTimespan;
+        dividendPointsToDisbursePerSecond = (totalDividendAmount - lastAvailableDividentAmount) / disburseDividendsTimespan;
         disburseBatchDivisor = amountIn;
     }
 
@@ -262,24 +262,24 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
             return;
         }
 
-        lastAvailableDividentPoints = totalAvailableDividendPoints();
+        lastAvailableDividentAmount = totalAvailableDividendPoints();
         disburseBatchTime = block.timestamp;
 
-        uint256 remainingPoints = totalDividendPoints - lastAvailableDividentPoints;
+        uint256 remainingPoints = totalDividendAmount - lastAvailableDividentAmount;
         if (remainingPoints == 0) {
             return;
         }
 
-        totalDividendPoints = totalDividendPoints + (remainingPoints * disburseBatchDivisor / amountIn) - remainingPoints;
-        dividendPointsToDisbursePerSecond = (totalDividendPoints - lastAvailableDividentPoints) / (disburseDividendsTimespan - (block.timestamp - disburseBatchTime));
+        totalDividendAmount = totalDividendAmount + (remainingPoints * disburseBatchDivisor / amountIn) - remainingPoints;
+        dividendPointsToDisbursePerSecond = (totalDividendAmount - lastAvailableDividentAmount) / (disburseDividendsTimespan - (block.timestamp - disburseBatchTime));
 
         disburseBatchDivisor = amountIn;
     }
 
     function totalAvailableDividendPoints() internal view returns(uint256) {
-        uint256 points = lastAvailableDividentPoints + (block.timestamp - disburseBatchTime) * dividendPointsToDisbursePerSecond;
-        if (points > totalDividendPoints) {
-            return totalDividendPoints;
+        uint256 points = lastAvailableDividentAmount + (block.timestamp - disburseBatchTime) * dividendPointsToDisbursePerSecond;
+        if (points > totalDividendAmount) {
+            return totalDividendAmount;
         }
 
         return points;
