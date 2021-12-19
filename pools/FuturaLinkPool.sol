@@ -13,12 +13,12 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
         uint256 totalValueClaimed;
         uint256 lastStakeTime;
 
-        uint256 lastDividendPoints;
+        uint256 lastDividend;
         uint256 unclaimedDividends;
         uint256 earned;
     }
 
-    uint256 public constant DIVIDEND_POINTS_ACCURACY = TOTAL_SUPPLY;
+    uint256 public constant DIVIDEND_ACCURACY = TOTAL_SUPPLY;
 
     IBEP20 public outToken;
     IBEP20 public inToken;
@@ -27,7 +27,6 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     uint256 public amountIn;
     uint256 public totalDividends; 
     uint256 public totalDividendPoints;
-    uint16 public futuralinkPointsPerToken;
     bool public override isStakingEnabled;
     uint256 public override earlyUnstakingFeeDuration = 1 days;
     uint16 public override unstakingFeeMagnitude = 10;
@@ -62,8 +61,6 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     constructor(IFutura futura, IFuturaLinkFuel _fuel, address routerAddress, IBEP20 _inToken, IBEP20 _outToken) FuturaLinkComponent(futura, _fuel) {
         inToken = _inToken;
         outToken = _outToken;
-
-        futuralinkPointsPerToken = 10;
         isStakingEnabled = true;
         
         setPancakeSwapRouter(routerAddress);
@@ -122,12 +119,12 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
 
     function unclaimedDividendsOf(address userAddress) external view returns (uint256) {
         UserInfo storage user = userInfo[userAddress];
-        return (user.unclaimedDividends + calculateReward(user)) / DIVIDEND_POINTS_ACCURACY;
+        return (user.unclaimedDividends + calculateReward(user)) / DIVIDEND_ACCURACY;
     }
 
     function unclaimedValueOf(address userAddress) external override view returns (uint256) {
         UserInfo storage user = userInfo[userAddress];
-        uint256 unclaimedDividends = (user.unclaimedDividends + calculateReward(user)) / DIVIDEND_POINTS_ACCURACY;
+        uint256 unclaimedDividends = (user.unclaimedDividends + calculateReward(user)) / DIVIDEND_ACCURACY;
         return valueOfOutTokens(unclaimedDividends);
     }
 
@@ -137,7 +134,7 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
 
     function totalEarnedBy(address userAddress) external view returns (uint256) {
         UserInfo storage user = userInfo[userAddress];
-        return (user.earned + calculateReward(user)) / DIVIDEND_POINTS_ACCURACY;
+        return (user.earned + calculateReward(user)) / DIVIDEND_ACCURACY;
     }
 
     function excessTokens(address tokenAddress) public virtual view returns(uint256) {
@@ -227,10 +224,10 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
 
         UserInfo storage user = userInfo[userAddress];
 
-        uint256 reward = user.unclaimedDividends / DIVIDEND_POINTS_ACCURACY;
+        uint256 reward = user.unclaimedDividends / DIVIDEND_ACCURACY;
         require(reward > 0, "FuturaLinkPool: Nothing to claim");
 
-        user.unclaimedDividends -= reward * DIVIDEND_POINTS_ACCURACY;
+        user.unclaimedDividends -= reward * DIVIDEND_ACCURACY;
         user.totalValueClaimed += valueOfOutTokens(reward);
         
         amountOut -= reward;
@@ -254,7 +251,7 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
         lastAvailableDividentPoints = totalAvailableDividendPoints();
         disburseBatchTime = block.timestamp;
 
-        totalDividendPoints += amount * DIVIDEND_POINTS_ACCURACY / amountIn;
+        totalDividendPoints += amount * DIVIDEND_ACCURACY / amountIn;
 
         dividendPointsToDisbursePerSecond = (totalDividendPoints - lastAvailableDividentPoints) / disburseDividendsTimespan;
         disburseBatchDivisor = amountIn;
@@ -295,11 +292,11 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
 
         user.unclaimedDividends += reward;
         user.earned += reward;
-        user.lastDividendPoints = totalAvailableDividendPoints();
+        user.lastDividend = totalAvailableDividendPoints();
     }
 
     function calculateReward(UserInfo storage user) private view returns (uint256) {
-        return (totalAvailableDividendPoints() - user.lastDividendPoints) * user.totalStakeAmount;
+        return (totalAvailableDividendPoints() - user.lastDividend) * user.totalStakeAmount;
     }
     
     function buyOutTokens(uint256 weiFunds) internal virtual returns(uint256) { 

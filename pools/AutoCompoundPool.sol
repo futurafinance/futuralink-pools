@@ -75,13 +75,13 @@ abstract contract AutoCompoundPool is StakeFuturaPool {
         updateStakingOf(userAddress);
 
         UserInfo storage user = userInfo[userAddress];
-        uint256 reward = user.unclaimedDividends / DIVIDEND_POINTS_ACCURACY;
+        uint256 reward = user.unclaimedDividends / DIVIDEND_ACCURACY;
         if (reward < minEarningsToAutoCompound) {
             return;
         }
 
         // Claim
-        user.unclaimedDividends -= reward * DIVIDEND_POINTS_ACCURACY;
+        user.unclaimedDividends -= reward * DIVIDEND_ACCURACY;
         amountOut -= reward;
 
         uint256 fee =  reward * processingFeeMagnitude / 1000;
