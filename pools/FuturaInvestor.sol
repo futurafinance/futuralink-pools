@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.6;
+pragma solidity 0.8.5;
 
-import "./IInvestor.sol";
-import "./IInvestmentPlan.sol";
-import "./base/access/AccessControlled.sol";
-import "./base/token/BEP20/EmergencyWithdrawable.sol";
+import "../interfaces/IInvestor.sol";
+import "../interfaces/IFundingPlan.sol";
+import "../utils/AccessControlled.sol";
+import "../utils/EmergencyWithdrawable.sol";
 
 contract FuturaInvestor is IInvestor, AccessControlled, EmergencyWithdrawable {
-    IInvestmentPlan[] public plans;
+    IFundingPlan[] public plans;
     mapping(address => uint256) public planIndices;
     mapping(address => uint256) public allocations;
     mapping(address => uint256) public totalAmountsSent;
@@ -37,7 +37,7 @@ contract FuturaInvestor is IInvestor, AccessControlled, EmergencyWithdrawable {
         require(!planExists(planAddress), "Investor: Plan already exists");
 
         planIndices[planAddress] = plans.length;
-        plans.push(IInvestmentPlan(planAddress));
+        plans.push(IFundingPlan(planAddress));
     }
 
     function setAllocation(address planAddress, uint256 allocation) external onlyOwner {
@@ -72,7 +72,7 @@ contract FuturaInvestor is IInvestor, AccessControlled, EmergencyWithdrawable {
 
         // Replace current index with the last one
         if (index != plans.length - 1) {
-            IInvestmentPlan lastPlan = plans[plans.length - 1];
+            IFundingPlan lastPlan = plans[plans.length - 1];
             plans[index] = lastPlan;
             planIndices[address(lastPlan)] = index;
         }

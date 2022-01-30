@@ -18,7 +18,7 @@ abstract contract AutoCompoundPool is StakeFuturaPool {
     event AutoCompoundStatusChanged(address indexed user, bool isEnabled);
     event AutoCompounded(address indexed user, uint256 amount);
 
-    constructor(IFutura futura, IFuturaLinkFuel fuel, address routerAddress, IBEP20 _outToken) StakeFuturaPool(futura, fuel, routerAddress, _outToken) {
+    constructor(IFutura futura, IFuturaLinkFuel fuel, IInvestor investor, address routerAddress, IBEP20 _outToken) StakeFuturaPool(futura, fuel, investor, routerAddress, _outToken) {
         
     }
 

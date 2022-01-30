@@ -6,10 +6,8 @@ import "./FuturaLinkPool.sol";
 contract StakeFuturaPool is FuturaLinkPool {
     uint256 burnTokensThreshold;
 
-    constructor(IFutura futura, IFuturaLinkFuel fuel, address _routerAddress, IBEP20 _outToken) FuturaLinkPool(futura, fuel, _routerAddress, futura, _outToken) {
-        futuralinkPointsPerToken = 10;
+    constructor(IFutura futura, IFuturaLinkFuel fuel, IInvestor investor, address routerAddress, IBEP20 outToken) FuturaLinkPool(futura, fuel, investor, routerAddress, futura, outToken) {
         isStakingEnabled = true;
-
         burnTokensThreshold = 100000 * 10**futura.decimals();
     }
 

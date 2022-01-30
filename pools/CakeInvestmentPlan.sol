@@ -2,20 +2,13 @@
 
 pragma solidity >= 0.8.5;
 
+import "./../interfaces/IMasterChef.sol";
 import "./../interfaces/IInvestor.sol";
 import "./../interfaces/IFundingPlan.sol";
 import "./../interfaces/IFutura.sol";
 import "./../utils/AccessControlled.sol";
 import "./../utils/PancakeSwapHelper.sol";
 import "./../utils/EmergencyWithdrawable.sol";
-
-interface IMasterChef {
-    function enterStaking(uint256 amount) external;
-
-    function leaveStaking(uint256 amount) external;
-
-    function pendingCake(uint256 _pid, address _user) external view returns (uint256);
-}
 
 contract CakeInvestmentPlan is IFundingPlan, PancakeSwapHelper, EmergencyWithdrawable {
     IMasterChef public masterChef;
@@ -85,8 +78,7 @@ contract CakeInvestmentPlan is IFundingPlan, PancakeSwapHelper, EmergencyWithdra
         require(destination != address(0), "CakeInvestmentPlan: Invalid address");
         profitsDestination = destination;
     }
-
-
+    
     function doStake(uint256 cakeAmount) internal {
         masterChef.enterStaking(cakeAmount);
         totalStaked += cakeAmount;
@@ -117,6 +109,6 @@ contract CakeInvestmentPlan is IFundingPlan, PancakeSwapHelper, EmergencyWithdra
     function approveCake() external onlyOwner {
         cake.approve(_pancakeSwapRouterAddress, ~uint256(0));
     }
-
+    
     receive() external payable { }
 }

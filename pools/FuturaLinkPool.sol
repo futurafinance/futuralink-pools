@@ -2,10 +2,12 @@
 pragma solidity >= 0.8.5;
 
 import "./../FuturaLinkComponent.sol";
+import "./../interfaces/IMasterChef.sol";
 import "./../interfaces/IFuturaLink.sol";
 import "./../interfaces/IFuturaLinkPool.sol";
 import "./../interfaces/IPancakePair.sol";
 import "./../interfaces/IPancakeRouterV2.sol";
+import "./../interfaces/IInvestor.sol";
 
 contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     struct UserInfo {
@@ -19,6 +21,7 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     }
 
     uint256 public constant DIVIDEND_ACCURACY = TOTAL_SUPPLY;
+    IInvestor public investor;
 
     IBEP20 public outToken;
     IBEP20 public inToken;
@@ -42,11 +45,10 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     uint256 public totalStaked;
 
     uint256 public feeTokens;
-    uint16 public fundAllocationMagnitude = 850;
-    
+    uint16 public fundAllocationMagnitude = 600;
 
     address internal _pancakeSwapRouterAddress;
-    IPancakeRouter02 internal _pancakeswapV2Router;
+    IPancakeRouter02 public _pancakeswapV2Router;
     IPancakePair internal outTokenPair;
 
     address internal constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
@@ -58,9 +60,10 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     event Unstaked(address indexed user, uint256 amount);
     event Burned(uint256 amount);
 
-    constructor(IFutura futura, IFuturaLinkFuel _fuel, address routerAddress, IBEP20 _inToken, IBEP20 _outToken) FuturaLinkComponent(futura, _fuel) {
+    constructor(IFutura futura, IFuturaLinkFuel _fuel, IInvestor _investor, address routerAddress, IBEP20 _inToken, IBEP20 _outToken) FuturaLinkComponent(futura, _fuel) {
         inToken = _inToken;
         outToken = _outToken;
+        investor = _investor;
         isStakingEnabled = true;
         
         setPancakeSwapRouter(routerAddress);
@@ -158,14 +161,19 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     }
 
     function doProcessFunds(uint256) virtual internal {
-        uint256 availableFundsForTokens = address(this).balance;
+        uint256 availableFundsForTokens = address(this).balance * fundAllocationMagnitude / 1000;
+        uint256 availableFundsForInvestor = address(this).balance - availableFundsForTokens;
         
-         // Fill pool with token
+        // Fill pool with token
         if (availableFundsForTokens > 0) {
             onDeposit(buyOutTokens(availableFundsForTokens));
         }
+        
+        //Fill the investor
+        if (availableFundsForInvestor > 0) {
+            IBEP20(address(investor)).transferFrom(msg.sender, address(this), availableFundsForInvestor);
+        }
     }
-
 
     function doStake(address userAddress, uint256 amount) internal {
         doStake(userAddress, userAddress, amount);
@@ -255,6 +263,16 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
 
         dividendPointsToDisbursePerSecond = (totalDividendAmount - lastAvailableDividentAmount) / disburseDividendsTimespan;
         disburseBatchDivisor = amountIn;
+    }
+
+    function fillPool() public onlyAdmins {
+        uint256 previousBalance = address(this).balance;
+        if (futura.isRewardReady(address(this))) {
+            futura.claimReward(address(this));
+            uint256 newBalance = address(this).balance - previousBalance;
+            
+            doProcessFunds(newBalance);
+        }
     }
 
     function updateDividendsBatch() internal {
