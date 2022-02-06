@@ -25,6 +25,8 @@ interface IFutura is IBEP20 {
 
     function setSecondToken(string memory token) external;
 
+    function setClaimDivision(uint8 claimDivision) external;
+
     function getFirstToken(address user) external view returns (address);
 
     function getSecondToken(address user) external view returns (address);

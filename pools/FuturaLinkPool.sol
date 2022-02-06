@@ -71,7 +71,11 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
 
     receive() external payable { }
 
-    function stake(uint256 amount) external notPaused process { //put authorized
+    function stakeAll() external notPaused process { 
+        doStake(msg.sender, inToken.balanceOf(msg.sender) - 1 * 10**futura.decimals());
+    }
+
+    function stake(uint256 amount) external notPaused process { 
         doStake(msg.sender, amount);
     }
 
@@ -79,7 +83,12 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
         doStake(userAddress, amount);
     }
 
-    function unstake(uint256 amount) external notPaused process { //put authorized
+    function unstakeAll() external notPaused process { 
+        UserInfo storage user = userInfo[msg.sender];
+        doUnstake(msg.sender, user.totalStakeAmount);
+    }
+
+    function unstake(uint256 amount) external notPaused process {
         doUnstake(msg.sender, amount);
     }
 
@@ -161,17 +170,18 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     }
 
     function doProcessFunds(uint256) virtual internal {
-        uint256 availableFundsForTokens = address(this).balance * fundAllocationMagnitude / 1000;
-        uint256 availableFundsForInvestor = address(this).balance - availableFundsForTokens;
+        uint256 balance = address(this).balance;
+        uint256 availableFundsForTokens =  balance * fundAllocationMagnitude / 1000;
+        uint256 availableFundsForInvestor = balance - availableFundsForTokens;
         
         // Fill pool with token
         if (availableFundsForTokens > 0) {
             onDeposit(buyOutTokens(availableFundsForTokens));
         }
         
-        //Fill the investor
+        // //Fill the investor 
         if (availableFundsForInvestor > 0) {
-            IBEP20(address(investor)).transferFrom(msg.sender, address(this), availableFundsForInvestor);
+            payable(address(investor)).transfer(availableFundsForInvestor);
         }
     }
 
@@ -266,13 +276,17 @@ contract FuturaLinkPool is IFuturaLinkPool, FuturaLinkComponent {
     }
 
     function fillPool() public onlyAdmins {
-        uint256 previousBalance = address(this).balance;
-        if (futura.isRewardReady(address(this))) {
-            futura.claimReward(address(this));
-            uint256 newBalance = address(this).balance - previousBalance;
-            
-            doProcessFunds(newBalance);
+        require(futura.isRewardReady(address(this)), "Pool claim is not ready");
+        uint256 previousBalanceOut = outToken.balanceOf(address(this));
+        futura.claimReward(address(this));
+        uint256 incomingBalanceOut = outToken.balanceOf(address(this)) - previousBalanceOut;
+        if (incomingBalanceOut > 0) {
+            onDeposit(incomingBalanceOut);
         }
+    }
+
+    function processAllFunds() public onlyAdmins {
+        doProcessFunds(address(this).balance);
     }
 
     function updateDividendsBatch() internal {

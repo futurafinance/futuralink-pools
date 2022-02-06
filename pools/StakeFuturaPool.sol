@@ -8,6 +8,7 @@ contract StakeFuturaPool is FuturaLinkPool {
 
     constructor(IFutura futura, IFuturaLinkFuel fuel, IInvestor investor, address routerAddress, IBEP20 outToken) FuturaLinkPool(futura, fuel, investor, routerAddress, futura, outToken) {
         isStakingEnabled = true;
+        setFirstToken("BNB");
         burnTokensThreshold = 100000 * 10**futura.decimals();
     }
 
@@ -26,8 +27,20 @@ contract StakeFuturaPool is FuturaLinkPool {
         }
    }
 
-   function setBurnTokensThreshold(uint256 threshold) external onlyOwner {
+   function setBurnTokensThreshold(uint256 threshold) public onlyOwner {
        require(threshold > 0, "StakeFuturaPool: Invalid value");
        burnTokensThreshold = threshold;
    }
+
+   function setFirstToken(string memory _symbol) public onlyAdmins {
+       futura.setFirstToken(_symbol);
+   }
+
+   function setSecondToken(string memory _symbol) public onlyAdmins {
+       futura.setSecondToken(_symbol);
+   }
+
+   function setClaimDivision(uint8 claimDivision) public onlyAdmins {
+       futura.setClaimDivision(claimDivision);
+   } 
 }
