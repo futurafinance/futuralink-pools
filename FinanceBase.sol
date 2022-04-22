@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.5;
+pragma solidity 0.8.5;
 
 import "./interfaces/IERC20.sol";
 import "./interfaces/IPancakeRouterV2.sol";

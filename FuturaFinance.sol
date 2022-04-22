@@ -6,17 +6,18 @@
  * | |__ _   _| |_ _   _ _ __ __ _  | |__   _ _ __   __ _ _ __   ___ ___ 
  * |  __| | | | __| | | | '__/ _` | |  __| | | '_ \ / _` | '_ \ / __/ _ \
  * | |  | |_| | |_| |_| | | | (_| | | |    | | | | | (_| | | | | (_|  __/
- * |_|   \__,_|\__|\__,_|_|  \__,_| |_|    |_|_| |_|\__,_|_| |_|\___\___| v.1.5
+ * |_|   \__,_|\__|\__,_|_|  \__,_| |_|    |_|_| |_|\__,_|_| |_|\___\___| v.2.0
  *                                                                     
- *  
+ *  - Added support for contracts to claim
+ * 
  *  Site: http://futurafinance.io/
  *  Telegram: https://t.me/FuturaBSC
  *  Twitter: http://twitter.com/FuturaBSC
  *  
- *  dev - @MonanRise (Twitter)
+ *
  */
 
-pragma solidity ^0.8.5;
+pragma solidity 0.8.5;
 
 import "./FinanceBase.sol";
 

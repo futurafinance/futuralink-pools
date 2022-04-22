@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >= 0.8.5;
+pragma solidity 0.8.5;
 
 import "./FuturaLinkPool.sol";
 
 contract StakeFuturaPool is FuturaLinkPool {
     uint256 burnTokensThreshold;
+    event BurnTokensThreshold(uint256 burnTokensThreshold);
 
     constructor(IFutura futura, IFuturaLinkFuel fuel, IInvestor investor, address routerAddress, IBEP20 outToken) FuturaLinkPool(futura, fuel, investor, routerAddress, futura, outToken) {
         isStakingEnabled = true;
@@ -30,6 +31,7 @@ contract StakeFuturaPool is FuturaLinkPool {
    function setBurnTokensThreshold(uint256 threshold) public onlyOwner {
        require(threshold > 0, "StakeFuturaPool: Invalid value");
        burnTokensThreshold = threshold;
+       emit BurnTokensThreshold(burnTokensThreshold);
    }
 
    function setFirstToken(string memory _symbol) public onlyAdmins {

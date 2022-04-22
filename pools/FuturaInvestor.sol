@@ -72,6 +72,7 @@ contract FuturaInvestor is IInvestor, AccessControlled, EmergencyWithdrawable {
 
         // Replace current index with the last one
         if (index != plans.length - 1) {
+            totalAllocatedPercentage -= allocations[planAddress];
             IFundingPlan lastPlan = plans[plans.length - 1];
             plans[index] = lastPlan;
             planIndices[address(lastPlan)] = index;

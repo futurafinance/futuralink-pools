@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >= 0.8.5;
+pragma solidity 0.8.5;
 
 import "./StakeFuturaPool.sol";
 
-abstract contract AutoCompoundPool is StakeFuturaPool {
+contract AutoCompoundPool is StakeFuturaPool {
 
     address[] public autoCompoundAddresses;
     mapping(address => uint256) public autoCompoundIndices;
